@@ -4,6 +4,10 @@
   "description": "A simple person schema",
   "type": "object",
   "properties": {
+    "id": {
+      "description": "The person's identifier",
+      "type": "string"
+    },
     "name": {
       "description": "The person's name",
       "type": "string"
@@ -19,5 +23,5 @@
       "format": "email"
     }
   },
-  "required": ["name", "age"]
+  "required": ["id", "name", "age"]
 }
