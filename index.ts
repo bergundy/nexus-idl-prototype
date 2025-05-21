@@ -3,6 +3,7 @@ import { quicktype, InputData } from "quicktype-core";
 import {
   generate,
   SUPPORTED_LANGUAGES,
+  type GeneratedCode,
   type SupportedLanguage,
 } from "./src/generator";
 import { SchemaLoader } from "./src/loader";
@@ -43,29 +44,41 @@ async function main() {
   const lang = args["--lang"] as SupportedLanguage;
   const schemaFiles = args._;
 
-  console.log("Language:", lang);
-  console.log("Schemas:", schemaFiles);
-
   const inputData = new InputData();
   const loader = await SchemaLoader.load(schemaFiles);
 
   inputData.addInput(loader.jsonSchemaInput);
 
-  const { lines } = await quicktype({
-    inputData, // This will contain all JSON schemas
+  const { lines: jsonSchemaLines } = await quicktype({
+    inputData,
     lang,
-    // It's often good to set fixedTopLevels to true when providing multiple files
-    // to ensure each schema file produces its own top-level type.
-    fixedTopLevels: true,
+    leadingComments: [],
   });
 
-  console.log("\nQuicktype Generated Code (from JSON Schemas):\n");
-  console.log(lines.join("\n"));
+  const nexusGeneratedCode: GeneratedCode[] = loader.nexusSchemas.map(
+    (schema) => generate(schema, lang)
+  );
 
-  for (const schema of loader.nexusSchemas) {
-    const lines = await generate(schema, lang);
-    console.log(lines.join("\n"));
+  if (nexusGeneratedCode.length > 0) {
+    for (const line of nexusGeneratedCode[0].imports) {
+      console.log(line);
+    }
+  }
+
+  for (const line of jsonSchemaLines) {
+    console.log(line);
+  }
+
+  for (const code of nexusGeneratedCode) {
+    for (const line of code.body) {
+      console.log(line);
+    }
   }
 }
 
-await main();
+try {
+  await main();
+} catch (error) {
+  console.error(error);
+  process.exit(1);
+}

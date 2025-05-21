@@ -3,25 +3,31 @@ import { Schema } from "./schema";
 export const SUPPORTED_LANGUAGES = ["typescript", "ts"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
-export async function generate(
+export type GeneratedCode = {
+  imports: string[];
+  body: string[];
+};
+
+export function generate(
   schema: typeof Schema.infer,
   lang: SupportedLanguage
-): Promise<string[]> {
-  const lines: string[] = ['import * as nexus from "nexus-rpc"', ""];
+): GeneratedCode {
+  const imports: string[] = ['import * as nexus from "nexus-rpc"'];
+  const body: string[] = [];
   for (const service of schema.services) {
-    lines.push(
-      `export const ${service.identifier}Service = nexus.service("${(service.name || service.identifier).replaceAll('"', '\\"')}", {`
+    body.push(
+      `export const ${service.identifier} = nexus.service("${(service.name || service.identifier).replaceAll('"', '\\"')}", {`
     );
     for (const operation of service.operations) {
-      lines.push(
+      body.push(
         `  ${operation.identifier}: nexus.operation<${operation.input || "void"}, ${operation.output || "void"}>({`
       );
-      lines.push(
-        `    name: ${(operation.name || operation.identifier).replaceAll('"', '\\"')},`
+      body.push(
+        `    name: "${(operation.name || operation.identifier).replaceAll('"', '\\"')}",`
       );
-      lines.push(`  }),`);
+      body.push(`  }),`);
     }
-    lines.push(`});`);
+    body.push(`});`);
   }
-  return lines;
+  return { imports, body };
 }
