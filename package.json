@@ -20,6 +20,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "arg": "^5.0.2"
+    "arg": "^5.0.2",
+    "quicktype-core": "^23.2.5"
   }
 }
