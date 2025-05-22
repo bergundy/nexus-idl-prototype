@@ -25,20 +25,17 @@ async function main() {
   }
 
   if (!args["--lang"]) {
-    console.error("Error: --lang option is required.");
-    process.exit(1);
+    throw new Error("--lang option is required.");
   }
 
   if (!SUPPORTED_LANGUAGES.includes(args["--lang"] as SupportedLanguage)) {
-    console.error(
-      `Error: Unsupported language: ${args["--lang"]}, supported languages: ${SUPPORTED_LANGUAGES.join(", ")}`
+    throw new Error(
+      `Unsupported language: ${args["--lang"]}, supported languages: ${SUPPORTED_LANGUAGES.join(", ")}`
     );
-    process.exit(1);
   }
 
   if (!args._ || args._.length === 0) {
-    console.error("Error: At least one schema argument must be provided.");
-    process.exit(1);
+    throw new Error("At least one schema argument must be provided.");
   }
 
   const lang = args["--lang"] as SupportedLanguage;
@@ -79,6 +76,6 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  console.error(error);
+  console.error(`${error}`);
   process.exit(1);
 }
