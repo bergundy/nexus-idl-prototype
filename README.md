@@ -9,7 +9,13 @@ A code generator from JSON schema and Nexus service definitions.
 To generate code using the included sample schemas for TypeScript, run the following command:
 
 ```bash
-bun ./index.ts --lang ts samples/schemas/* > services.ts
+bun ./index.ts --lang ts samples/schemas/separate/* > services.ts
+```
+
+Alternatively, generate from a single file that combines Nexus and JSON schemas:
+
+```bash
+bun ./index.ts --lang ts samples/schemas/combined/* > services.ts
 ```
 
 This will process all schemas in the `samples/schemas/` directory and output the generated TypeScript code to the

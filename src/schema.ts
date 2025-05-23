@@ -6,8 +6,9 @@ export const Operation = type({
   identifier: "/^[a-zA-Z][a-zA-Z0-9_]*$/",
   "name?": "string",
   "description?": "string",
-  "input?": "string",
-  "output?": "string",
+  // In the future, we can support inlining the schema here, but for now we'll just use a reference.
+  "input?": { $ref: "string" },
+  "output?": { $ref: "string" },
 });
 
 export const Service = type({

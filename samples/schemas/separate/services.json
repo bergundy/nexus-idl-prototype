@@ -10,8 +10,12 @@
           "identifier": "getUser",
           "name": "Get User",
           "description": "Retrieves a user by their ID.",
-          "input": "GetPersonRequest",
-          "output": "GetPersonResponse"
+          "input": {
+            "$ref": "./GetPersonRequest.json"
+          },
+          "output": {
+            "$ref": "./GetPersonResponse.json"
+          }
         }
       ]
     }

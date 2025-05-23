@@ -1,7 +1,7 @@
 import arg from "arg";
 import { quicktype, InputData } from "quicktype-core";
 import {
-  generate,
+  Generator,
   SUPPORTED_LANGUAGES,
   type GeneratedCode,
   type SupportedLanguage,
@@ -35,7 +35,7 @@ async function main() {
   }
 
   if (!args._ || args._.length === 0) {
-    throw new Error("At least one schema argument must be provided.");
+    throw new Error("At least one schema argument must be provided");
   }
 
   const lang = args["--lang"] as SupportedLanguage;
@@ -51,9 +51,10 @@ async function main() {
     lang,
     leadingComments: [],
   });
-
-  const nexusGeneratedCode: GeneratedCode[] = loader.nexusSchemas.map(
-    (schema) => generate(schema, lang)
+  const nexusGeneratedCode: GeneratedCode[] = await Promise.all(
+    loader.nexusSchemas.map(({ schema, path }) =>
+      new Generator(loader.schemaStore, path, schema, lang).generate()
+    )
   );
 
   if (nexusGeneratedCode.length > 0) {
@@ -76,6 +77,10 @@ async function main() {
 try {
   await main();
 } catch (error) {
-  console.error(`${error}`);
+  if (process.env.NEXUS_IDL_DEBUG) {
+    console.error(error);
+  } else {
+    console.error(`${error}`);
+  }
   process.exit(1);
 }
