@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-export const SCHEMA_URL = "http://api.nexus/draft-01/schema#";
+export const SCHEMA_URL = "http://api.nexus/schema/draft-01#";
 
 export const Operation = type({
   identifier: "/^[a-zA-Z][a-zA-Z0-9_]*$/",

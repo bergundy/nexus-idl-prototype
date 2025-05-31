@@ -50,6 +50,10 @@ async function main() {
     inputData,
     lang,
     leadingComments: [],
+    indentation: "  ",
+    rendererOptions: {
+      "just-types": true,
+    },
   });
   const nexusGeneratedCode: GeneratedCode[] = await Promise.all(
     loader.nexusSchemas.map(({ schema, path }) =>

@@ -2,6 +2,7 @@ import { type } from "arktype";
 import { JSONSchemaInput, FetchingJSONSchemaStore } from "quicktype-core";
 import fs from "fs/promises";
 import path from "path";
+import YAML from "yaml";
 import { Schema, SCHEMA_URL } from "./schema";
 
 export class SchemaLoader {
@@ -22,7 +23,7 @@ export class SchemaLoader {
 
   private async loadSchema(schemaFile: string) {
     const schemaContent = await fs.readFile(schemaFile, "utf-8");
-    const schemaUntyped = JSON.parse(schemaContent);
+    const schemaUntyped = YAML.parse(schemaContent);
 
     if (schemaUntyped.$schema === SCHEMA_URL) {
       const schema = Schema(schemaUntyped);
