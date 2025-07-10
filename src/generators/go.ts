@@ -25,6 +25,8 @@ export class GoGenerator extends BaseGenerator {
         `const ${serviceConstantName}ServiceName = ${JSON.stringify(serviceName)}`
       );
 
+      body.push("");
+
       // Store operation information for interface generation
       const operations = new Array<{
         methodName: string;
@@ -39,6 +41,8 @@ export class GoGenerator extends BaseGenerator {
           `${service.identifier}_${operation.identifier}`
         );
 
+        body.push("");
+
         const description =
           operation.description || `represents the ${operationName} operation.`;
         let docLines = wrapDocstring(
@@ -51,6 +55,8 @@ export class GoGenerator extends BaseGenerator {
         body.push(
           `const ${constantName}OperationName = ${JSON.stringify(operationName)}`
         );
+
+        body.push("");
 
         const [inputType, outputType] = await Promise.all([
           this.getType(
@@ -73,6 +79,8 @@ export class GoGenerator extends BaseGenerator {
           `var ${constantName}Operation = nexus.NewOperationReference[${inputType}, ${outputType}](${constantName}OperationName)`
         );
 
+        body.push("");
+
         // Store operation info for interface generation
         operations.push({
           methodName: this.toGoConstant(operation.identifier),
@@ -94,11 +102,63 @@ export class GoGenerator extends BaseGenerator {
       // Add methods for each operation
       for (const opInfo of operations) {
         body.push(
-          `\t${opInfo.methodName}() nexus.Operation[${opInfo.inputType}, ${opInfo.outputType}]`
+          `\t${opInfo.methodName}(name string) nexus.Operation[${opInfo.inputType}, ${opInfo.outputType}]`
         );
       }
 
       body.push("}");
+
+      body.push("");
+
+      // Generate unimplemented struct
+      const unimplementedStructName = `Unimplemented${interfaceName}`;
+      const unimplementedDescription = `provides an unimplemented version of ${interfaceName}.`;
+      const unimplementedDocLines = wrapDocstring(
+        `${unimplementedStructName} ${unimplementedDescription}`,
+        { prefix: "//" }
+      );
+      unimplementedDocLines.forEach((line) => body.push(line));
+      body.push(`type ${unimplementedStructName} struct{}`);
+      body.push("");
+
+      // Generate unimplemented operation structs for each operation
+      for (const opInfo of operations) {
+        const unimplementedOpStructName = `unimplemented${serviceConstantName}${opInfo.methodName}`;
+        const unimplementedOpDescription = `provides an unimplemented ${opInfo.methodName} operation.`;
+        const unimplementedOpDocLines = wrapDocstring(
+          `${unimplementedOpStructName} ${unimplementedOpDescription}`,
+          { prefix: "//" }
+        );
+        unimplementedOpDocLines.forEach((line) => body.push(line));
+        body.push(`type ${unimplementedOpStructName} struct {`);
+        body.push(
+          `\tnexus.UnimplementedOperation[${opInfo.inputType}, ${opInfo.outputType}]`
+        );
+        body.push(`\tname string`);
+        body.push(`}`);
+        body.push("");
+      }
+
+      // Generate methods for unimplemented struct
+      for (const opInfo of operations) {
+        const methodDescription = `returns an unimplemented operation.`;
+        const methodDocLines = wrapDocstring(
+          `${opInfo.methodName} ${methodDescription}`,
+          { prefix: "//" }
+        );
+        methodDocLines.forEach((line) => body.push(line));
+        body.push(
+          `func (${unimplementedStructName}) ${opInfo.methodName}(name string) nexus.Operation[${opInfo.inputType}, ${opInfo.outputType}] {`
+        );
+        const unimplementedOpStructName = `unimplemented${serviceConstantName}${opInfo.methodName}`;
+        body.push(`\treturn &${unimplementedOpStructName}{name: name}`);
+        body.push("}");
+
+        // Add blank line between methods (except after the last method)
+        if (opInfo !== operations[operations.length - 1]) {
+          body.push("");
+        }
+      }
 
       // Add blank line between services (except after the last service)
       if (service !== this.schema.services[this.schema.services.length - 1]) {
