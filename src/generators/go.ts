@@ -1,38 +1,46 @@
 import type { GeneratedCode } from "./types";
 import { BaseGenerator } from "./base";
+import { wrapDocstring } from "./utils";
 
 export class GoGenerator extends BaseGenerator {
   public async generate(): Promise<GeneratedCode> {
     const imports: string[] = ['import "github.com/nexus-rpc/sdk-go/nexus"'];
     const body: string[] = [];
 
-    // Generate string constants for service names
-    body.push("// Service name constants");
+    // Generate grouped constants and references by service
     for (const service of this.schema.services) {
       const serviceName = service.name || service.identifier;
-      body.push(
-        `const ${this.toGoConstant(service.identifier)}Service = "${serviceName}"`
-      );
-    }
-    body.push("");
+      const serviceConstantName = this.toGoConstant(service.identifier);
 
-    // Generate string constants for operation names
-    body.push("// Operation name constants");
-    for (const service of this.schema.services) {
+      const description =
+        service.description || `represents the ${serviceName} service.`;
+      const docLines = wrapDocstring(
+        `${serviceConstantName}ServiceName ${description}`,
+        {
+          prefix: "//",
+        }
+      );
+      docLines.forEach((line) => body.push(line));
+      body.push(`const ${serviceConstantName}ServiceName = "${serviceName}"`);
+
+      // Operations for this service
       for (const operation of service.operations) {
         const operationName = operation.name || operation.identifier;
         const constantName = this.toGoConstant(
           `${service.identifier}_${operation.identifier}`
         );
-        body.push(`const ${constantName}OperationName = "${operationName}"`);
-      }
-    }
-    body.push("");
 
-    // Generate OperationReference variables
-    body.push("// Operation references");
-    for (const service of this.schema.services) {
-      for (const operation of service.operations) {
+        const description =
+          operation.description || `represents the ${operationName} operation.`;
+        let docLines = wrapDocstring(
+          `${constantName}OperationName ${description}`,
+          {
+            prefix: "//",
+          }
+        );
+        docLines.forEach((line) => body.push(line));
+        body.push(`const ${constantName}OperationName = "${operationName}"`);
+
         const [inputType, outputType] = await Promise.all([
           this.getType(
             service.identifier,
@@ -46,13 +54,18 @@ export class GoGenerator extends BaseGenerator {
           ),
         ]);
 
-        const constantName = this.toGoConstant(
-          `${service.identifier}_${operation.identifier}`
-        );
-
+        docLines = wrapDocstring(`${constantName}Operation ${description}`, {
+          prefix: "//",
+        });
+        docLines.forEach((line) => body.push(line));
         body.push(
           `var ${constantName}Operation = nexus.NewOperationReference[${inputType}, ${outputType}](${constantName}OperationName)`
         );
+      }
+
+      // Add blank line between services (except after the last service)
+      if (service !== this.schema.services[this.schema.services.length - 1]) {
+        body.push("");
       }
     }
 
@@ -66,8 +79,8 @@ export class GoGenerator extends BaseGenerator {
   private toGoConstant(name: string): string {
     // Convert to PascalCase for Go constants
     return name
-      .split(/[_-]/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .split(/[_\.\-]/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join("");
   }
 }
