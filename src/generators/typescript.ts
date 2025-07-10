@@ -21,9 +21,7 @@ export class TypeScriptGenerator extends BaseGenerator {
       serviceDocLines.forEach((line) => body.push(line));
 
       body.push(
-        `export const ${service.identifier} = nexus.service("${(
-          service.name || service.identifier
-        ).replaceAll('"', '\"')}", {`
+        `export const ${service.identifier} = nexus.service(${JSON.stringify(serviceName)}, {`
       );
       for (const operation of service.operations) {
         // Add operation docstring
@@ -54,12 +52,7 @@ export class TypeScriptGenerator extends BaseGenerator {
         body.push(
           `  ${operation.identifier}: nexus.operation<${inputType}, ${outputType}>({`
         );
-        body.push(
-          `    name: "${(operation.name || operation.identifier).replaceAll(
-            '"',
-            '\"'
-          )}",`
-        );
+        body.push(`    name: ${JSON.stringify(operationName)},`);
         body.push(`  }),`);
       }
       body.push(`});`);

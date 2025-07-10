@@ -21,7 +21,9 @@ export class GoGenerator extends BaseGenerator {
         }
       );
       docLines.forEach((line) => body.push(line));
-      body.push(`const ${serviceConstantName}ServiceName = "${serviceName}"`);
+      body.push(
+        `const ${serviceConstantName}ServiceName = ${JSON.stringify(serviceName)}`
+      );
 
       // Operations for this service
       for (const operation of service.operations) {
@@ -39,7 +41,9 @@ export class GoGenerator extends BaseGenerator {
           }
         );
         docLines.forEach((line) => body.push(line));
-        body.push(`const ${constantName}OperationName = "${operationName}"`);
+        body.push(
+          `const ${constantName}OperationName = ${JSON.stringify(operationName)}`
+        );
 
         const [inputType, outputType] = await Promise.all([
           this.getType(
