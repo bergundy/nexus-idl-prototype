@@ -25,6 +25,13 @@ export class GoGenerator extends BaseGenerator {
         `const ${serviceConstantName}ServiceName = ${JSON.stringify(serviceName)}`
       );
 
+      // Store operation information for interface generation
+      const operations = new Array<{
+        methodName: string;
+        inputType: string;
+        outputType: string;
+      }>();
+
       // Operations for this service
       for (const operation of service.operations) {
         const operationName = operation.name || operation.identifier;
@@ -65,7 +72,33 @@ export class GoGenerator extends BaseGenerator {
         body.push(
           `var ${constantName}Operation = nexus.NewOperationReference[${inputType}, ${outputType}](${constantName}OperationName)`
         );
+
+        // Store operation info for interface generation
+        operations.push({
+          methodName: this.toGoConstant(operation.identifier),
+          inputType,
+          outputType,
+        });
       }
+
+      // Generate handler interface
+      const interfaceName = `${serviceConstantName}Handler`;
+      const interfaceDescription = `defines the handler interface for the ${serviceConstantName} service.`;
+      const interfaceDocLines = wrapDocstring(
+        `${interfaceName} ${interfaceDescription}`,
+        { prefix: "//" }
+      );
+      interfaceDocLines.forEach((line) => body.push(line));
+      body.push(`type ${interfaceName} interface {`);
+
+      // Add methods for each operation
+      for (const opInfo of operations) {
+        body.push(
+          `\t${opInfo.methodName}() nexus.Operation[${opInfo.inputType}, ${opInfo.outputType}]`
+        );
+      }
+
+      body.push("}");
 
       // Add blank line between services (except after the last service)
       if (service !== this.schema.services[this.schema.services.length - 1]) {
