@@ -7,16 +7,15 @@ import {
   type SupportedLanguage,
 } from "./src/generator";
 import { SchemaLoader } from "./src/loader";
+import { loadPlugin, type Plugin } from "./src/plugin";
 
 async function main() {
   const args = arg({
     "--help": Boolean,
     "-h": "--help",
     "--lang": String,
-    // Allow multiple schema arguments using ... which arg handles as _.
-    // We've already updated the logic to use args._ for schemaFiles
+    "--plugin": [String],
   });
-
   if (args["--help"]) {
     console.log(
       "Usage: nexus-idl --lang <language> <schema_path> [<schema_path>...]"
@@ -38,6 +37,11 @@ async function main() {
     throw new Error("At least one schema argument must be provided");
   }
 
+  const plugins: Plugin[] = await Promise.all(
+    (args?.["--plugin"] ?? []).map(loadPlugin)
+  );
+  // TODO: add logger and log plugins loaded
+
   const lang = args["--lang"] as SupportedLanguage;
   const schemaFiles = args._;
 
@@ -56,8 +60,10 @@ async function main() {
     },
   });
   const nexusGeneratedCode: GeneratedCode[] = await Promise.all(
-    loader.nexusSchemas.map(({ schema, path }) =>
-      new Generator(loader.schemaStore, path, schema, lang).generate()
+    loader.nexusSchemas.flatMap(({ schema, path }) =>
+      [new Generator(loader.schemaStore, path, schema, lang).generate()].concat(
+        plugins.map((plugin) => plugin.generate(schema, lang))
+      )
     )
   );
 
