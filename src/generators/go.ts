@@ -153,12 +153,41 @@ export class GoGenerator extends BaseGenerator {
         const unimplementedOpStructName = `unimplemented${serviceConstantName}${opInfo.methodName}`;
         body.push(`\treturn &${unimplementedOpStructName}{name: name}`);
         body.push("}");
-
-        // Add blank line between methods (except after the last method)
-        if (opInfo !== operations[operations.length - 1]) {
-          body.push("");
-        }
+        body.push("");
       }
+
+      // Generate New service constructor function
+      const newFunctionName = `New${serviceConstantName}`;
+      const newFunctionDescription = `creates a new ${serviceConstantName} service from a handler with all operations registered.`;
+      const newFunctionDocLines = wrapDocstring(
+        `${newFunctionName} ${newFunctionDescription}`,
+        { prefix: "//" }
+      );
+      newFunctionDocLines.forEach((line) => body.push(line));
+      body.push(
+        `func ${newFunctionName}(handler ${interfaceName}) (*nexus.Service, error) {`
+      );
+      body.push(
+        `\tservice := nexus.NewService(${serviceConstantName}ServiceName)`
+      );
+      body.push("");
+
+      // Register each operation
+      for (const opInfo of operations) {
+        const constantName = this.toGoConstant(
+          `${service.identifier}_${opInfo.methodName}`
+        );
+        body.push(
+          `\terr := service.Register(handler.${opInfo.methodName}(${constantName}OperationName))`
+        );
+        body.push(`\tif err != nil {`);
+        body.push(`\t\treturn nil, err`);
+        body.push(`\t}`);
+        body.push("");
+      }
+
+      body.push(`\treturn service, nil`);
+      body.push("}");
 
       // Add blank line between services (except after the last service)
       if (service !== this.schema.services[this.schema.services.length - 1]) {
