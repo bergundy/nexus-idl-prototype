@@ -8,6 +8,7 @@ import {
 } from "./src/generator";
 import { SchemaLoader } from "./src/loader";
 import { loadPlugin, type Plugin } from "./src/plugin";
+import { SchemaStore } from "./src/schemastore";
 
 async function main() {
   const args = arg({
@@ -59,18 +60,23 @@ async function main() {
       "just-types": true,
     },
   });
+
   const nexusGeneratedCode: GeneratedCode[] = await Promise.all(
-    loader.nexusSchemas.flatMap(({ schema, path }) =>
-      [new Generator(loader.schemaStore, path, schema, lang).generate()].concat(
-        plugins.map((plugin) => plugin.generate(schema, lang))
-      )
-    )
+    loader.nexusSchemas.flatMap(({ schema, path }) => {
+      const schemaStore = new SchemaStore(loader.schemaStore, path);
+      return [new Generator(schemaStore, schema, lang).generate()].concat(
+        plugins.map((plugin) => plugin.generate(schemaStore, schema, lang))
+      );
+    })
   );
 
   if (nexusGeneratedCode.length > 0) {
-    for (const line of nexusGeneratedCode[0].imports) {
-      console.log(line);
+    for (const code of nexusGeneratedCode) {
+      for (const line of code.imports) {
+        console.log(line);
+      }
     }
+    console.log();
   }
 
   for (const line of jsonSchemaLines) {
@@ -78,6 +84,7 @@ async function main() {
   }
 
   for (const code of nexusGeneratedCode) {
+    console.log();
     for (const line of code.body) {
       console.log(line);
     }

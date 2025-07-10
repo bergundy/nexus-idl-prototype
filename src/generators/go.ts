@@ -1,8 +1,14 @@
 import type { GeneratedCode } from "./types";
-import { BaseGenerator } from "./base";
 import { wrapDocstring } from "./utils";
+import type { Schema } from "../schema";
+import { SchemaStore } from "../schemastore";
 
-export class GoGenerator extends BaseGenerator {
+export class GoGenerator {
+  constructor(
+    protected readonly schemaStore: SchemaStore,
+    protected readonly schema: typeof Schema.infer
+  ) {}
+
   public async generate(): Promise<GeneratedCode> {
     const imports: string[] = ['import "github.com/nexus-rpc/sdk-go/nexus"'];
     const body: string[] = [];
@@ -10,7 +16,7 @@ export class GoGenerator extends BaseGenerator {
     // Generate grouped constants and references by service
     for (const service of this.schema.services) {
       const serviceName = service.name || service.identifier;
-      const serviceConstantName = this.toGoConstant(service.identifier);
+      const serviceConstantName = toGoConstant(service.identifier);
 
       const description =
         service.description || `represents the ${serviceName} service.`;
@@ -37,7 +43,7 @@ export class GoGenerator extends BaseGenerator {
       // Operations for this service
       for (const operation of service.operations) {
         const operationName = operation.name || operation.identifier;
-        const constantName = this.toGoConstant(
+        const constantName = toGoConstant(
           `${service.identifier}_${operation.identifier}`
         );
 
@@ -59,14 +65,16 @@ export class GoGenerator extends BaseGenerator {
         body.push("");
 
         const [inputType, outputType] = await Promise.all([
-          this.getType(
+          this.schemaStore.getType(
             service.identifier,
             operation.identifier,
+            "nexus.NoValue",
             operation.input
           ),
-          this.getType(
+          this.schemaStore.getType(
             service.identifier,
             operation.identifier,
+            "nexus.NoValue",
             operation.output
           ),
         ]);
@@ -83,7 +91,7 @@ export class GoGenerator extends BaseGenerator {
 
         // Store operation info for interface generation
         operations.push({
-          methodName: this.toGoConstant(operation.identifier),
+          methodName: toGoConstant(operation.identifier),
           inputType,
           outputType,
         });
@@ -174,7 +182,7 @@ export class GoGenerator extends BaseGenerator {
 
       // Register each operation
       for (const opInfo of operations) {
-        const constantName = this.toGoConstant(
+        const constantName = toGoConstant(
           `${service.identifier}_${opInfo.methodName}`
         );
         body.push(
@@ -197,16 +205,14 @@ export class GoGenerator extends BaseGenerator {
 
     return { imports, body };
   }
+}
 
-  protected getVoidType(): string {
-    return "nexus.NoValue";
-  }
-
-  private toGoConstant(name: string): string {
-    // Convert to PascalCase for Go constants
-    return name
-      .split(/[_\.\-]/)
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join("");
-  }
+/**
+ * Convert to PascalCase for Go constants
+ */
+export function toGoConstant(name: string): string {
+  return name
+    .split(/[_\.\-]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
 }

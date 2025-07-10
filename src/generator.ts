@@ -1,9 +1,9 @@
-import path from "path";
 import type { FetchingJSONSchemaStore } from "quicktype-core";
 import { Schema } from "./schema";
 import type { GeneratedCode } from "./generators/types";
 import { TypeScriptGenerator } from "./generators/typescript";
 import { GoGenerator } from "./generators/go";
+import { SchemaStore } from "./schemastore";
 
 export const SUPPORTED_LANGUAGES = ["typescript", "ts", "go"] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -12,8 +12,7 @@ export type { GeneratedCode };
 
 export class Generator {
   constructor(
-    private readonly schemaStore: FetchingJSONSchemaStore,
-    private readonly path: string,
+    private readonly schemaStore: SchemaStore,
     private readonly schema: typeof Schema.infer,
     private readonly lang: SupportedLanguage
   ) {}
@@ -22,18 +21,10 @@ export class Generator {
     switch (this.lang) {
       case "typescript":
       case "ts":
-        const tsGenerator = new TypeScriptGenerator(
-          this.schemaStore,
-          this.path,
-          this.schema
-        );
+        const tsGenerator = new TypeScriptGenerator(this.schemaStore, this.schema);
         return await tsGenerator.generate();
       case "go":
-        const goGenerator = new GoGenerator(
-          this.schemaStore,
-          this.path,
-          this.schema
-        );
+        const goGenerator = new GoGenerator(this.schemaStore, this.schema);
         return await goGenerator.generate();
       default:
         throw new Error(`Unsupported language: ${this.lang}`);

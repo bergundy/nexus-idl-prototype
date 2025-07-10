@@ -1,24 +1,20 @@
-import path from "path";
+import path from "node:path";
 import type { FetchingJSONSchemaStore } from "quicktype-core";
-import { Schema } from "../schema";
-import type { GeneratedCode } from "./types";
 
-export abstract class BaseGenerator {
+export class SchemaStore {
   constructor(
     protected readonly schemaStore: FetchingJSONSchemaStore,
-    protected readonly path: string,
-    protected readonly schema: typeof Schema.infer
+    protected readonly path: string
   ) {}
 
-  public abstract generate(): Promise<GeneratedCode>;
-
-  protected async getType(
+  public async getType(
     service: string,
     operation: string,
+    voidType: string,
     t?: { $ref: string }
   ): Promise<string> {
     if (!t) {
-      return this.getVoidType();
+      return voidType;
     }
 
     const schemaPath = t.$ref.startsWith("#")
@@ -54,6 +50,4 @@ export abstract class BaseGenerator {
 
     return schema.title;
   }
-
-  protected abstract getVoidType(): string;
 }

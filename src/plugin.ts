@@ -1,6 +1,8 @@
+import path from "node:path";
 import { type } from "arktype";
 import type { GeneratedCode, SupportedLanguage } from "./generator";
 import type { Schema } from "./schema";
+import type { SchemaStore } from "./schemastore";
 
 export const PluginSchema = type({
   name: "string",
@@ -11,13 +13,15 @@ export const PluginSchema = type({
 
 export type Plugin = typeof PluginSchema.infer & {
   generate: (
+    schemaStore: SchemaStore,
     schema: typeof Schema.infer,
     lang: SupportedLanguage
   ) => Promise<GeneratedCode>;
 };
 
-export async function loadPlugin(path: string) {
-  const plugin = await import(path);
+export async function loadPlugin(p: string) {
+  const resolvedPath = path.resolve(p);
+  const { default: plugin } = await import(resolvedPath);
   const pluginSchema = PluginSchema(plugin);
   if (pluginSchema instanceof type.errors) {
     throw new Error(`Invalid plugin schema: ${pluginSchema.summary}`);

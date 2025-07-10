@@ -1,8 +1,14 @@
 import type { GeneratedCode } from "./types";
-import { BaseGenerator } from "./base";
+import { SchemaStore } from "../schemastore";
 import { wrapDocstring } from "./utils";
+import type { Schema } from "../schema";
 
-export class TypeScriptGenerator extends BaseGenerator {
+export class TypeScriptGenerator {
+  public constructor(
+    protected readonly schemaStore: SchemaStore,
+    protected readonly schema: typeof Schema.infer
+  ) {}
+
   public async generate(): Promise<GeneratedCode> {
     const imports: string[] = ['import * as nexus from "nexus-rpc"'];
     const body: string[] = [];
@@ -38,14 +44,16 @@ export class TypeScriptGenerator extends BaseGenerator {
         operationDocLines.forEach((line) => body.push(line));
 
         const [inputType, outputType] = await Promise.all([
-          this.getType(
+          this.schemaStore.getType(
             service.identifier,
             operation.identifier,
+            "void",
             operation.input
           ),
-          this.getType(
+          this.schemaStore.getType(
             service.identifier,
             operation.identifier,
+            "void",
             operation.output
           ),
         ]);
@@ -58,9 +66,5 @@ export class TypeScriptGenerator extends BaseGenerator {
       body.push(`});`);
     }
     return { imports, body };
-  }
-
-  protected getVoidType(): string {
-    return "void";
   }
 }
