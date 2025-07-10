@@ -131,4 +131,90 @@ describe("wrapDocstring", () => {
       "// This is a very long prefix that takes up most of the line"
     );
   });
+
+  test("should include pre string at the beginning", () => {
+    const text = "This is a test with pre string";
+    const result = wrapDocstring(text, {
+      prefix: " *",
+      header: "/**",
+    });
+
+    expect(result).toBeArray();
+    expect(result[0]).toEqual("/**");
+    expect(result[1]).toEqual(" * This is a test with pre string");
+  });
+
+  test("should include post string at the end", () => {
+    const text = "This is a test with post string";
+    const result = wrapDocstring(text, {
+      prefix: " *",
+      trailer: " */",
+    });
+
+    expect(result).toBeArray();
+    expect(result[0]).toEqual(" * This is a test with post string");
+    expect(result[result.length - 1]).toEqual(" */");
+  });
+
+  test("should include both pre and post strings", () => {
+    const text = "This is a test with both pre and post strings";
+    const result = wrapDocstring(text, {
+      prefix: " *",
+      header: "/**",
+      trailer: " */",
+    });
+
+    expect(result).toEqual([
+      "/**",
+      " * This is a test with both pre and post strings",
+      " */",
+    ]);
+  });
+
+  test("should handle pre and post with wrapped text", () => {
+    const text =
+      "This is a longer text that should be wrapped across multiple lines when it exceeds the maxLength";
+    const result = wrapDocstring(text, {
+      prefix: " *",
+      maxLength: 50,
+      header: "/**",
+      trailer: " */",
+    });
+
+    expect(result).toBeArray();
+    expect(result[0]).toEqual("/**");
+    expect(result[result.length - 1]).toEqual(" */");
+    expect(result.length).toBeGreaterThan(3); // pre + multiple content lines + post
+
+    // Check that middle lines use the prefix
+    for (let i = 1; i < result.length - 1; i++) {
+      expect(result[i]).toStartWith(" *");
+    }
+  });
+
+  test("should handle pre and post with empty text", () => {
+    const text = "";
+    const result = wrapDocstring(text, {
+      prefix: " *",
+      header: "/**",
+      trailer: " */",
+    });
+
+    expect(result).toEqual([]);
+  });
+
+  test("should handle pre and post with indented JSDoc-style comments", () => {
+    const text = "This is an indented JSDoc comment";
+    const result = wrapDocstring(text, {
+      prefix: "   *",
+      header: "  /**",
+      trailer: "   */",
+    });
+
+    expect(result).toEqual([
+      "  /**",
+      "   * This is an indented JSDoc comment",
+      "   */",
+    ]);
+  });
 });
