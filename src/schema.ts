@@ -21,6 +21,7 @@ export const Service = type({
 export const Schema = type({
   $schema: `'${SCHEMA_URL}'`,
   "goPackage?": "string",
+  "javaPackage?": "string",
   services: Service.array(),
 });
 

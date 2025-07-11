@@ -1,6 +1,7 @@
 ---
 "$schema": http://api.nexus/schema/draft-01#
 goPackage: gen
+javaPackage: io.temporal.nexusidl.gen
 services:
   - identifier: UserService
     name: directory.UserService

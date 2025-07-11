@@ -73,6 +73,8 @@ export async function main(argv: string[], output: Writer = stdout) {
     rendererOptions: {
       "just-types": true,
       "pydantic-base-model": true,
+      // TODO: support multiple schemas
+      package: loader.nexusSchemas[0].schema.javaPackage,
     },
   });
 
