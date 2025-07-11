@@ -10,6 +10,10 @@ export class GoGenerator {
   ) {}
 
   public async generate(): Promise<GeneratedCode> {
+    if (!this.schema.goPackage) {
+      throw new Error("goPackage is required to generate Go code");
+    }
+    const headers: string[] = [`package ${this.schema.goPackage}`];
     const imports: string[] = ['import "github.com/nexus-rpc/sdk-go/nexus"'];
     const body: string[] = [];
 
@@ -145,6 +149,11 @@ export class GoGenerator {
         body.push(`\tname string`);
         body.push(`}`);
         body.push("");
+
+        body.push(`func (op *${unimplementedOpStructName}) Name() string {`);
+        body.push(`\treturn op.name`);
+        body.push(`}`);
+        body.push("");
       }
 
       // Generate methods for unimplemented struct
@@ -203,7 +212,7 @@ export class GoGenerator {
       }
     }
 
-    return { imports, body };
+    return { headers, imports, body };
   }
 }
 

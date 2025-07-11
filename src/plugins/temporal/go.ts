@@ -95,7 +95,7 @@ export async function generateGo(
       );
       body.push(`\tvar output ${outputType}`);
       body.push(`\terr := f.Get(ctx, &output)`);
-      body.push(`\treturn &output, err`);
+      body.push(`\treturn output, err`);
       body.push(`}`);
 
       body.push("");
@@ -113,7 +113,7 @@ export async function generateGo(
         `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}Async(ctx workflow.Context, input ${inputType}, options workflow.NexusOperationOptions) ${futureType} {`
       );
       body.push(
-        `\tfut := c.c.ExecuteOperation(ctx, ${operationConstantName}OperationName, input, options)`
+        `\tfut := c.c.ExecuteOperation(ctx, ${serviceConstantName}${operationConstantName}OperationName, input, options)`
       );
       body.push(`\treturn ${futureType}{fut}`);
       body.push(`}`);

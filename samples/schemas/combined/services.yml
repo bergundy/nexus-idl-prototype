@@ -1,17 +1,18 @@
 ---
 "$schema": http://api.nexus/schema/draft-01#
+goPackage: gen
 services:
-- identifier: UserService
-  name: directory.UserService
-  description: Service for managing users.
-  operations:
-  - identifier: getUser
-    name: Get User
-    description: Retrieves a user by their ID.
-    input:
-      "$ref": "#definitions/getPersonRequest"
-    output:
-      "$ref": "#definitions/getPersonResponse"
+  - identifier: UserService
+    name: directory.UserService
+    description: Service for managing users.
+    operations:
+      - identifier: getUser
+        name: Get User
+        description: Retrieves a user by their ID.
+        input:
+          "$ref": "#definitions/getPersonRequest"
+        output:
+          "$ref": "#definitions/getPersonResponse"
 definitions:
   person:
     title: Person
@@ -33,9 +34,9 @@ definitions:
         type: string
         format: email
     required:
-    - id
-    - name
-    - age
+      - id
+      - name
+      - age
   getPersonRequest:
     title: GetPersonRequest
     description: Request to retrieve a person by their user ID.
@@ -45,7 +46,7 @@ definitions:
         type: string
         description: The unique identifier of the user.
     required:
-    - userId
+      - userId
   getPersonResponse:
     title: GetPersonResponse
     description: Response containing person details.
