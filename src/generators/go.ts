@@ -69,16 +69,16 @@ export class GoGenerator {
         body.push("");
 
         const [inputType, outputType] = await Promise.all([
-          this.schemaStore.getType(
+          toGoType(
+            this.schemaStore,
             service.identifier,
             operation.identifier,
-            "nexus.NoValue",
             operation.input
           ),
-          this.schemaStore.getType(
+          toGoType(
+            this.schemaStore,
             service.identifier,
             operation.identifier,
-            "nexus.NoValue",
             operation.output
           ),
         ]);
@@ -195,9 +195,8 @@ export class GoGenerator {
           `${service.identifier}_${opInfo.methodName}`
         );
         body.push(
-          `\terr := service.Register(handler.${opInfo.methodName}(${constantName}OperationName))`
+          `\tif err := service.Register(handler.${opInfo.methodName}(${constantName}OperationName)); err != nil {`
         );
-        body.push(`\tif err != nil {`);
         body.push(`\t\treturn nil, err`);
         body.push(`\t}`);
         body.push("");
@@ -224,4 +223,20 @@ export function toGoConstant(name: string): string {
     .split(/[_\.\-]/)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("");
+}
+
+export async function toGoType(
+  store: SchemaStore,
+  service: string,
+  operation: string,
+  io?: { $ref: string }
+): Promise<string> {
+  if (!io) {
+    return "nexus.NoValue";
+  }
+  const type = await store.resolveRef(service, operation, io);
+  if (type.type === "object") {
+    return "*" + type.title;
+  }
+  return type.type;
 }

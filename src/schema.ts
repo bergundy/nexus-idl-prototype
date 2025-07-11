@@ -23,3 +23,8 @@ export const Schema = type({
   "goPackage?": "string",
   services: Service.array(),
 });
+
+export const TypeSchema = type({
+  type: "string",
+  title: "string",
+});

@@ -18,10 +18,10 @@ import (
 
 var userServiceClient = gen.NewUserServiceWorkflowClient("example-endpoint")
 
-func CallerWorkflow(ctx workflow.Context) (gen.GetPersonResponse, error) {
-	output, err := userServiceClient.GetUser(ctx, gen.GetPersonRequest{UserID: "123"}, workflow.NexusOperationOptions{})
+func CallerWorkflow(ctx workflow.Context) (*gen.GetPersonResponse, error) {
+	output, err := userServiceClient.GetUser(ctx, &gen.GetPersonRequest{UserID: "123"}, workflow.NexusOperationOptions{})
 	if err != nil {
-		return gen.GetPersonResponse{}, err
+		return nil, err
 	}
 
 	return output, nil
@@ -31,9 +31,9 @@ type userServiceHandler struct {
 	gen.UnimplementedUserServiceHandler
 }
 
-func (*userServiceHandler) GetUser(name string) nexus.Operation[gen.GetPersonRequest, gen.GetPersonResponse] {
-	return nexus.NewSyncOperation(name, func(ctx context.Context, r gen.GetPersonRequest, options nexus.StartOperationOptions) (gen.GetPersonResponse, error) {
-		return gen.GetPersonResponse{Name: "bar"}, nil
+func (*userServiceHandler) GetUser(name string) nexus.Operation[*gen.GetPersonRequest, *gen.GetPersonResponse] {
+	return nexus.NewSyncOperation(name, func(ctx context.Context, r *gen.GetPersonRequest, options nexus.StartOperationOptions) (*gen.GetPersonResponse, error) {
+		return &gen.GetPersonResponse{Name: "bar"}, nil
 	})
 }
 

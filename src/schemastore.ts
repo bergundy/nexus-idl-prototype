@@ -1,5 +1,7 @@
 import path from "node:path";
 import type { FetchingJSONSchemaStore } from "quicktype-core";
+import { TypeSchema } from "./schema";
+import { type } from "arktype";
 
 export class SchemaStore {
   constructor(
@@ -7,16 +9,11 @@ export class SchemaStore {
     protected readonly path: string
   ) {}
 
-  public async getType(
+  public async resolveRef(
     service: string,
     operation: string,
-    voidType: string,
-    t?: { $ref: string }
-  ): Promise<string> {
-    if (!t) {
-      return voidType;
-    }
-
+    t: { $ref: string }
+  ): Promise<typeof TypeSchema.infer> {
     const schemaPath = t.$ref.startsWith("#")
       ? path.resolve(this.path)
       : path.isAbsolute(t.$ref)
@@ -48,6 +45,11 @@ export class SchemaStore {
       );
     }
 
-    return schema.title;
+    // Default to object type
+    const typeSchema = TypeSchema({ type: "object", ...schema });
+    if (typeSchema instanceof type.errors) {
+      throw new Error(`Invalid type schema: ${typeSchema.summary}`);
+    }
+    return typeSchema;
   }
 }

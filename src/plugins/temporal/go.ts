@@ -1,5 +1,5 @@
 import type { GeneratedCode } from "../../generator";
-import { toGoConstant } from "../../generators/go";
+import { toGoConstant, toGoType } from "../../generators/go";
 import { wrapDocstring } from "../../generators/utils";
 import type { Schema } from "../../schema";
 import type { SchemaStore } from "../../schemastore";
@@ -58,16 +58,16 @@ export async function generateGo(
       const operationName = operation.name || operation.identifier;
 
       const [inputType, outputType] = await Promise.all([
-        schemaStore.getType(
+        toGoType(
+          schemaStore,
           service.identifier,
           operation.identifier,
-          "nexus.NoValue",
           operation.input
         ),
-        schemaStore.getType(
+        toGoType(
+          schemaStore,
           service.identifier,
           operation.identifier,
-          "nexus.NoValue",
           operation.output
         ),
       ]);
@@ -90,12 +90,19 @@ export async function generateGo(
       body.push("");
 
       body.push("// GetTyped gets the typed result of the operation.");
-      body.push(
-        `func (f ${futureType}) GetTyped(ctx workflow.Context) (${outputType}, error) {`
-      );
-      body.push(`\tvar output ${outputType}`);
-      body.push(`\terr := f.Get(ctx, &output)`);
-      body.push(`\treturn output, err`);
+      if (outputType === "nexus.NoValue") {
+        body.push(
+          `func (f ${futureType}) GetTyped(ctx workflow.Context) error {`
+        );
+        body.push(`\treturn f.Get(ctx, nil)`);
+      } else {
+        body.push(
+          `func (f ${futureType}) GetTyped(ctx workflow.Context) (${outputType}, error) {`
+        );
+        body.push(`\tvar output ${outputType}`);
+        body.push(`\terr := f.Get(ctx, &output)`);
+        body.push(`\treturn output, err`);
+      }
       body.push(`}`);
 
       body.push("");
@@ -109,12 +116,21 @@ export async function generateGo(
           }
         )
       );
-      body.push(
-        `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}Async(ctx workflow.Context, input ${inputType}, options workflow.NexusOperationOptions) ${futureType} {`
-      );
-      body.push(
-        `\tfut := c.c.ExecuteOperation(ctx, ${serviceConstantName}${operationConstantName}OperationName, input, options)`
-      );
+      if (inputType === "nexus.NoValue") {
+        body.push(
+          `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}Async(ctx workflow.Context, options workflow.NexusOperationOptions) ${futureType} {`
+        );
+        body.push(
+          `\tfut := c.c.ExecuteOperation(ctx, ${serviceConstantName}${operationConstantName}OperationName, nil, options)`
+        );
+      } else {
+        body.push(
+          `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}Async(ctx workflow.Context, input ${inputType}, options workflow.NexusOperationOptions) ${futureType} {`
+        );
+        body.push(
+          `\tfut := c.c.ExecuteOperation(ctx, ${serviceConstantName}${operationConstantName}OperationName, input, options)`
+        );
+      }
       body.push(`\treturn ${futureType}{fut}`);
       body.push(`}`);
 
@@ -129,12 +145,22 @@ export async function generateGo(
           }
         )
       );
-      body.push(
-        `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}(ctx workflow.Context, input ${inputType}, options workflow.NexusOperationOptions) (${outputType}, error) {`
-      );
-      body.push(
-        `\tfut := c.${operationConstantName}Async(ctx, input, options)`
-      );
+      const returnType = outputType === "nexus.NoValue" ? "error" : `(${outputType}, error)`;
+      if (inputType === "nexus.NoValue") {
+        body.push(
+          `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}(ctx workflow.Context, options workflow.NexusOperationOptions) ${returnType} {`
+        );
+        body.push(
+          `\tfut := c.${operationConstantName}Async(ctx, options)`
+        );
+      } else {
+        body.push(
+          `func (c *${serviceConstantName}WorkflowClient) ${operationConstantName}(ctx workflow.Context, input ${inputType}, options workflow.NexusOperationOptions) ${returnType} {`
+        );
+        body.push(
+          `\tfut := c.${operationConstantName}Async(ctx, input, options)`
+        );
+      }
       body.push(`\treturn fut.GetTyped(ctx)`);
       body.push(`}`);
 

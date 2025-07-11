@@ -13,6 +13,15 @@ services:
           "$ref": "#definitions/getPersonRequest"
         output:
           "$ref": "#definitions/getPersonResponse"
+  - identifier: OneWayService
+    description: Sample service for testing one-way operations.
+    operations:
+      - identifier: noInput
+        output:
+          "$ref": "#definitions/noInputResponse"
+      - identifier: noOutput
+        input:
+          "$ref": "#definitions/noInputRequest"
 definitions:
   person:
     title: Person
@@ -51,3 +60,21 @@ definitions:
     title: GetPersonResponse
     description: Response containing person details.
     "$ref": "#/definitions/person"
+  noInputRequest:
+    title: NoInputRequest
+    type: object
+    properties:
+      message:
+        type: string
+        description: The message to send.
+    required:
+      - message
+  noInputResponse:
+    title: NoInputResponse
+    type: object
+    properties:
+      message:
+        type: string
+        description: The message to send.
+    required:
+      - message
