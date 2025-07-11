@@ -16,20 +16,13 @@ class TemporalPlugin implements Plugin {
     schema: typeof Schema.infer,
     lang: SupportedLanguage
   ): Promise<GeneratedCode> {
-    const imports: string[] = [];
-    const body: string[] = [];
-
-    // Add language-specific imports
     switch (lang) {
-      case "typescript":
-      case "ts":
-        // Nothing to do for TypeScript
-        return { imports, body };
       case "go":
         return generateGo(schemaStore, schema);
+      default:
+        // Nothing to do for other languages.
+        return { imports: [], body: [] };
     }
-
-    return { imports, body };
   }
 }
 

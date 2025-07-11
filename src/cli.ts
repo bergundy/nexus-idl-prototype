@@ -72,6 +72,7 @@ export async function main(argv: string[], output: Writer = stdout) {
     indentation: "  ",
     rendererOptions: {
       "just-types": true,
+      "pydantic-base-model": true,
     },
   });
 

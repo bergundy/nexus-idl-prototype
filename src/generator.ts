@@ -3,9 +3,16 @@ import { Schema } from "./schema";
 import type { GeneratedCode } from "./generators/types";
 import { TypeScriptGenerator } from "./generators/typescript";
 import { GoGenerator } from "./generators/go";
+import { PythonGenerator } from "./generators/python";
 import { SchemaStore } from "./schemastore";
 
-export const SUPPORTED_LANGUAGES = ["typescript", "ts", "go"] as const;
+export const SUPPORTED_LANGUAGES = [
+  "typescript",
+  "ts",
+  "go",
+  "python",
+  "py",
+] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 export type { GeneratedCode };
@@ -21,11 +28,21 @@ export class Generator {
     switch (this.lang) {
       case "typescript":
       case "ts":
-        const tsGenerator = new TypeScriptGenerator(this.schemaStore, this.schema);
+        const tsGenerator = new TypeScriptGenerator(
+          this.schemaStore,
+          this.schema
+        );
         return await tsGenerator.generate();
       case "go":
         const goGenerator = new GoGenerator(this.schemaStore, this.schema);
         return await goGenerator.generate();
+      case "python":
+      case "py":
+        const pythonGenerator = new PythonGenerator(
+          this.schemaStore,
+          this.schema
+        );
+        return await pythonGenerator.generate();
       default:
         throw new Error(`Unsupported language: ${this.lang}`);
     }
