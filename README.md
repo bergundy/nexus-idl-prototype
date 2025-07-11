@@ -2,7 +2,7 @@
 
 A code generator from JSON schema and Nexus service definitions.
 
-**⚠️ Work in progress, currently a TypeScript prototype is implemented ⚠️**
+**⚠️ Work in progress, currently a TypeScript, Python, and Go prototype is implemented ⚠️**
 
 ## Usage
 
@@ -32,7 +32,9 @@ export const UserService = nexus.service("directory.UserService", {
 });
 ```
 
-Sample TypeScript output can be found [here](./samples/output/ts/sample.ts).
+- Sample TypeScript output can be found [here](./samples/output/ts/sample.ts).
+- Sample Python output can be found [here](./samples/output/python/sample.py).
+- Sample Go + Temporal output can be found [here](src/plugins/temporal/samples/go/gen/gen.go).
 
 - The `--lang` option specifies the output language (e.g., `ts` for TypeScript).
 - The paths following the language are the schema files to process. You can specify individual files or use a glob
