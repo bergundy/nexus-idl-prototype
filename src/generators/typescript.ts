@@ -44,8 +44,18 @@ export class TypeScriptGenerator {
         operationDocLines.forEach((line) => body.push(line));
 
         const [inputType, outputType] = await Promise.all([
-          toTsType(this.schemaStore, service.identifier, operation.identifier, operation.input),
-          toTsType(this.schemaStore, service.identifier, operation.identifier, operation.output),
+          toTsType(
+            this.schemaStore,
+            service.identifier,
+            operation.identifier,
+            operation.input
+          ),
+          toTsType(
+            this.schemaStore,
+            service.identifier,
+            operation.identifier,
+            operation.output
+          ),
         ]);
         body.push(
           `  ${operation.identifier}: nexus.operation<${inputType}, ${outputType}>({`
@@ -54,12 +64,19 @@ export class TypeScriptGenerator {
         body.push(`  }),`);
       }
       body.push(`});`);
+
+      body.push("");
     }
     return { imports, body };
   }
 }
 
-export async function toTsType(store: SchemaStore, service: string, operation: string, io?: { $ref: string }): Promise<string> {
+export async function toTsType(
+  store: SchemaStore,
+  service: string,
+  operation: string,
+  io?: { $ref: string }
+): Promise<string> {
   if (!io) {
     return "void";
   }
